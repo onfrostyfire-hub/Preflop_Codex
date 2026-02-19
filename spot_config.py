@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from typing import Optional
 
-POSITIONS = ["EP", "MP", "CO", "BTN", "SB", "BB"]
 
 @dataclass(frozen=True)
 class SpotConfig:
@@ -11,29 +10,26 @@ class SpotConfig:
     hero_bet: Optional[float] = None
     villain_bet: Optional[float] = None
 
+
 SPOT_CONFIGS = {
-    # Open raise
-    "EP open raise": SpotConfig(hero="EP", villain=None, dealer="BTN"),
-    "MP open raise": SpotConfig(hero="MP", villain=None, dealer="BTN"),
-    "CO open raise": SpotConfig(hero="CO", villain=None, dealer="BTN"),
-    "BTN open raise": SpotConfig(hero="BTN", villain=None, dealer="BTN"),
-    "SB open raise": SpotConfig(hero="SB", villain=None, dealer="BTN"),
-
-    # Def vs 3bet (пока только EP ветка)
-    "EP vs 3bet MP": SpotConfig(hero="EP", villain="MP", dealer="BTN", hero_bet=2.5, villain_bet=7.5),
-    "EP vs 3bet CO/BU": SpotConfig(hero="EP", villain="CO", dealer="BTN", hero_bet=2.5, villain_bet=7.5),
-    "EP vs 3bet Blinds": SpotConfig(hero="EP", villain="SB", dealer="BTN", hero_bet=2.5, villain_bet=10.0),
-
-    "CO def vs 3bet BU": SpotConfig(hero="CO", villain="BTN", dealer="SB", hero_bet=2.5, villain_bet=7.5),
-    "CO def vs 3bet SB": SpotConfig(hero="CO", villain="SB", dealer="BTN", hero_bet=2.5, villain_bet=12),
-    "CO def vs 3bet BB": SpotConfig(hero="CO", villain="BB", dealer="BTN", hero_bet=2.5, villain_bet=12),
-    "BU def vs 3bet SB": SpotConfig(hero="BTN", villain="SB", dealer="BTN", hero_bet=2.5, villain_bet=12),
-    "BU def vs 3bet BB": SpotConfig(hero="BTN", villain="BB", dealer="BTN", hero_bet=2.5, villain_bet=12),
-    "SB def vs 3bet BB": SpotConfig(hero="SB", villain="BB", dealer="BTN", hero_bet=3.0, villain_bet=9),
-    "BBvsBU x2.5 nl500": SpotConfig(hero="BB", villain="BTN", dealer="BTN", hero_bet=1.0, villain_bet=2.5),
-    "BBvsBU x2.5 nl100": SpotConfig(hero="BB", villain="BTN", dealer="BTN", hero_bet=1.0, villain_bet=2.5),
-
+    "EP open raise": SpotConfig("EP", None, "BTN"),
+    "MP open raise": SpotConfig("MP", None, "BTN"),
+    "CO open raise": SpotConfig("CO", None, "BTN"),
+    "BTN open raise": SpotConfig("BTN", None, "BTN"),
+    "SB open raise": SpotConfig("SB", None, "BTN"),
+    "EP vs 3bet MP": SpotConfig("EP", "MP", "BTN", 2.5, 7.5),
+    "EP vs 3bet CO/BU": SpotConfig("EP", "CO", "BTN", 2.5, 7.5),
+    "EP vs 3bet Blinds": SpotConfig("EP", "SB", "BTN", 2.5, 9.0),
+    "CO def vs 3bet BU": SpotConfig("CO", "BTN", "SB", 2.5, 7.5),
+    "CO def vs 3bet SB": SpotConfig("CO", "SB", "BTN", 2.5, 9.0),
+    "CO def vs 3bet BB": SpotConfig("CO", "BB", "BTN", 2.5, 9.0),
+    "BU def vs 3bet SB": SpotConfig("BTN", "SB", "BTN", 2.5, 9.0),
+    "BU def vs 3bet BB": SpotConfig("BTN", "BB", "BTN", 2.5, 9.0),
+    "SB def vs 3bet BB": SpotConfig("SB", "BB", "BTN", 3.0, 9.0),
+    "BBvsBU x2.5 nl500": SpotConfig("BB", "BTN", "BTN", 1.0, 2.5),
+    "BBvsBU x2.5 nl100": SpotConfig("BB", "BTN", "BTN", 1.0, 2.5),
 }
 
+
 def get_spot_config(spot_name: str) -> SpotConfig:
-    return SPOT_CONFIGS.get(spot_name, SpotConfig(hero="EP", villain=None, dealer="BTN"))
+    return SPOT_CONFIGS.get(spot_name, SpotConfig("EP", None, "BTN"))
