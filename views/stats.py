@@ -1,15 +1,10 @@
  (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
-diff --git a/COPY_4_views_stats.md b/COPY_4_views_stats.md
+diff --git a/PASTE_4_views_stats.py b/PASTE_4_views_stats.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..8046531abbe79d0367912830c9c9513f9d727a21
+index 0000000000000000000000000000000000000000..75d77b7cba1a00e5c9249f652fb5f49ca98e5a34
 --- /dev/null
-+++ b/COPY_4_views_stats.md
-@@ -0,0 +1,88 @@
-+# Куда вставлять
-+`views/stats.py`
-+
-+# Что копировать
-+```python
++++ b/PASTE_4_views_stats.py
+@@ -0,0 +1,82 @@
 +import streamlit as st
 +import pandas as pd
 +from datetime import datetime, timedelta
@@ -92,7 +87,6 @@ index 0000000000000000000000000000000000000000..8046531abbe79d0367912830c9c9513f
 +            utils.delete_history(days=30); st.success("Готово!"); st.rerun()
 +        if d4.button("Стереть: Год", use_container_width=True):
 +            utils.delete_history(days=365); st.success("Готово!"); st.rerun()
-+```
  
 EOF
 )
