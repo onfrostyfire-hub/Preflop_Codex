@@ -1,15 +1,10 @@
  (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
-diff --git a/COPY_1_views_mobile.md b/COPY_1_views_mobile.md
+diff --git a/PASTE_1_views_mobile.py b/PASTE_1_views_mobile.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..79268fc83c0ebe8d2ea39858f3de0776adafc4b6
+index 0000000000000000000000000000000000000000..44e8c484d8df14bb27d6abf5422c7365d36c5857
 --- /dev/null
-+++ b/COPY_1_views_mobile.md
-@@ -0,0 +1,259 @@
-+# Куда вставлять
-+`views/mobile.py`
-+
-+# Что копировать
-+```python
++++ b/PASTE_1_views_mobile.py
+@@ -0,0 +1,253 @@
 +import streamlit as st
 +import random
 +from datetime import datetime
@@ -263,7 +258,6 @@ index 0000000000000000000000000000000000000000..79268fc83c0ebe8d2ea39858f3de0776
 +        if s2.button("NORM", use_container_width=True): utils.update_srs_smart(k, st.session_state.hand, 'normal'); st.session_state.hand = None; st.rerun()
 +        if s3.button("EASY", use_container_width=True): utils.update_srs_smart(k, st.session_state.hand, 'easy'); st.session_state.hand = None; st.rerun()
 +        st.markdown('</div>', unsafe_allow_html=True)
-+```
  
 EOF
 )
