@@ -4,23 +4,27 @@ import views.desktop
 import views.compare
 import views.stats
 
-st.set_page_config(page_title="Preflop Trainer", layout="wide")
+st.set_page_config(page_title='Poker Trainer', layout='wide', initial_sidebar_state='collapsed')
+
 
 def main():
     with st.sidebar:
-        st.title("Preflop Trainer")
-        mode = st.radio("Раздел", ["🎮 Trainer", "🔬 Range Lab", "📊 Stats"])
-        view = st.radio("Вид", ["Mobile", "Desktop"], index=0) if mode == "🎮 Trainer" else "Mobile"
+        st.title('Poker Trainer')
+        app_mode = st.radio('Menu', ['🎮 Trainer', '🔬 Range Lab', '📊 Statistics'])
 
-    if mode == "🔬 Range Lab":
+        view_type = 'Mobile'
+        if app_mode == '🎮 Trainer':
+            view_type = st.radio('View Mode', ['Mobile', 'Desktop'], index=0)
+
+    if app_mode == '🔬 Range Lab':
         views.compare.show()
-    elif mode == "📊 Stats":
+    elif app_mode == '📊 Statistics':
         views.stats.show()
+    elif view_type == 'Mobile':
+        views.mobile.show()
     else:
-        if view == "Mobile":
-            views.mobile.show()
-        else:
-            views.desktop.show()
+        views.desktop.show()
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     main()
