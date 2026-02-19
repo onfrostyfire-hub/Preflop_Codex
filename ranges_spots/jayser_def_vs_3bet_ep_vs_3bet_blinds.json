@@ -1,1 +1,10 @@
-
+{
+  "source": "Jayser",
+  "scenario": "Def vs 3bet",
+  "spot": "EP vs 3bet Blinds",
+  "data": {
+    "source": "AA,KK,QQ,JJ,TT,99,88,77,66,AK,AQ,AJ,AT,A9s,A8s,A7s,A6s,A5s,A4s,A3s,A2s,KQ,KJ,KTs,K9s,K8s,QJs,QTs,Q9s,JTs,J9s,T9s",
+    "call": "QQ,JJ,TT,99:0.5,AKo,AQs,AJs,ATs,KQs:0.5,KJs:0.5",
+    "4bet": "AA,KK,AKs,AKo:0.25,A5s:0.5,A4s:0.5,KQs:0.5,KJs:0.5"
+  }
+}
