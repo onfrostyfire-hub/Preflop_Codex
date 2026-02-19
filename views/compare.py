@@ -1,15 +1,10 @@
  (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
-diff --git a/COPY_3_views_compare.md b/COPY_3_views_compare.md
+diff --git a/PASTE_3_views_compare.py b/PASTE_3_views_compare.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..4871f6aaf572ef6afdc6eef8431c591bf2615b9e
+index 0000000000000000000000000000000000000000..df9785d51e5906157fbc1f2dd6d5dcdd75e23a60
 --- /dev/null
-+++ b/COPY_3_views_compare.md
-@@ -0,0 +1,81 @@
-+# Куда вставлять
-+`views/compare.py`
-+
-+# Что копировать
-+```python
++++ b/PASTE_3_views_compare.py
+@@ -0,0 +1,75 @@
 +import streamlit as st
 +import utils
 +
@@ -85,7 +80,6 @@ index 0000000000000000000000000000000000000000..4871f6aaf572ef6afdc6eef8431c591b
 +            st.markdown('<div class="matrix-box">', unsafe_allow_html=True)
 +            st.markdown(utils.render_range_matrix(data_b), unsafe_allow_html=True)
 +            st.markdown('</div>', unsafe_allow_html=True)
-+```
  
 EOF
 )
