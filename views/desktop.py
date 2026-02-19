@@ -1,15 +1,10 @@
  (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
-diff --git a/COPY_2_views_desktop.md b/COPY_2_views_desktop.md
+diff --git a/PASTE_2_views_desktop.py b/PASTE_2_views_desktop.py
 new file mode 100644
-index 0000000000000000000000000000000000000000..1a0e60917f10a7a3bb68fda34a477283db32ff1f
+index 0000000000000000000000000000000000000000..4d1b82fe5c130a8102825a195b672f6bbc7ea988
 --- /dev/null
-+++ b/COPY_2_views_desktop.md
-@@ -0,0 +1,270 @@
-+# Куда вставлять
-+`views/desktop.py`
-+
-+# Что копировать
-+```python
++++ b/PASTE_2_views_desktop.py
+@@ -0,0 +1,264 @@
 +import streamlit as st
 +import random
 +from datetime import datetime
@@ -274,7 +269,6 @@ index 0000000000000000000000000000000000000000..1a0e60917f10a7a3bb68fda34a477283
 +            st.markdown(f"<div style='text-align:center;font-weight:bold;margin-bottom:10px;'>{sp}</div>", unsafe_allow_html=True)
 +            with st.expander("🫣 Подсмотреть Рендж", expanded=False):
 +                st.markdown(utils.render_range_matrix(data, st.session_state.hand), unsafe_allow_html=True)
-+```
  
 EOF
 )
