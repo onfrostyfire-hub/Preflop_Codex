@@ -1,204 +1,182 @@
 import json
-import os
 import random
+from datetime import datetime, timedelta
 from pathlib import Path
+
+import pandas as pd
 import streamlit as st
-from spot_config import SPOT_CONFIGS, get_spot_config
 
-RANGES_DIR = "ranges_spots"
+
+RANGES_DIR = Path("ranges_spots")
+RANGES_FILE = Path("ranges.json")
+HISTORY_FILE = Path("history_log.csv")
+
 RANKS = "AKQJT98765432"
-
-# 169 рук
 ALL_HANDS = []
-for i, r1 in enumerate(RANKS):
-    for j, r2 in enumerate(RANKS):
-        if i < j:
-            ALL_HANDS.append(r1 + r2 + "s")
-            ALL_HANDS.append(r1 + r2 + "o")
-        elif i == j:
-            ALL_HANDS.append(r1 + r2)
+for i, a in enumerate(RANKS):
+    for j, b in enumerate(RANKS):
+        if i == j:
+            ALL_HANDS.append(a + b)
+        elif i < j:
+            ALL_HANDS.append(a + b + "s")
+            ALL_HANDS.append(a + b + "o")
+
 
 GROUPS_DEFINITIONS = {
-    "Open Raise": [
-        "EP open raise", "MP open raise", "CO open raise", "BTN open raise", "SB open raise"
-    ],
-    "EP OOP vs 3bet": [
-        "EP vs 3bet MP", "EP vs 3bet CO/BU"
-    ],
-    "EP IP vs 3bet": [
-        "EP vs 3bet Blinds"
-    ],
+    "Open Raise": ["EP open raise", "MP open raise", "CO open raise", "BTN open raise", "SB open raise"],
+    "EP OOP vs 3bet": ["EP vs 3bet MP", "EP vs 3bet CO/BU"],
+    "EP IP vs 3bet": ["EP vs 3bet Blinds"],
 }
 
+
 @st.cache_data(ttl=0)
-def load_ranges():
-    db = {}
-    spot_dir = Path(RANGES_DIR)
-    if not spot_dir.exists():
-        return {}
+def load_ranges() -> dict:
+    db: dict = {}
 
-    for file_path in sorted(spot_dir.glob("*.json")):
-        with file_path.open("r", encoding="utf-8") as f:
-            payload = json.load(f)
+    if RANGES_DIR.exists():
+        for file_path in sorted(RANGES_DIR.glob("*.json")):
+            with file_path.open("r", encoding="utf-8") as f:
+                payload = json.load(f)
+            src = payload.get("source")
+            scenario = payload.get("scenario")
+            spot = payload.get("spot")
+            data = payload.get("data")
+            if src and scenario and spot and isinstance(data, dict):
+                db.setdefault(src, {}).setdefault(scenario, {})[spot] = data
 
-        src = payload.get("source")
-        sc = payload.get("scenario")
-        sp = payload.get("spot")
-        data = payload.get("data")
+    if db:
+        return db
 
-        if not src or not sc or not sp or data is None:
-            continue
+    if RANGES_FILE.exists():
+        with RANGES_FILE.open("r", encoding="utf-8") as f:
+            return json.load(f)
 
-        db.setdefault(src, {}).setdefault(sc, {})[sp] = data
+    return {}
 
-    return db
 
-def get_filter_options():
-    return ["All"] + list(GROUPS_DEFINITIONS.keys())
-
-def get_filtered_pool(ranges_db, selected_sources, selected_scenarios, filter_mode):
-    pool = []
-    for src in selected_sources:
-        for sc in selected_scenarios:
-            if sc not in ranges_db.get(src, {}):
-                continue
-            for sp in ranges_db[src][sc]:
-                if filter_mode == "All":
-                    pool.append((src, sc, sp))
-                elif filter_mode in GROUPS_DEFINITIONS and sp in GROUPS_DEFINITIONS[filter_mode]:
-                    pool.append((src, sc, sp))
-    return pool
-
-def get_weight(hand, range_str):
-    if not range_str or not isinstance(range_str, str):
+def get_weight(hand: str, range_str: str) -> float:
+    if not range_str:
         return 0.0
 
-    items = [x.strip() for x in range_str.replace("\n", " ").split(",") if x.strip()]
-    for item in items:
-        if ":" in item:
-            h_part, w_part = item.split(":")
-            weight = float(w_part)
+    for token in [x.strip() for x in range_str.split(",") if x.strip()]:
+        if ":" in token:
+            combo, raw_w = token.split(":", 1)
+            weight = float(raw_w)
             if weight <= 1:
                 weight *= 100
         else:
-            h_part = item
+            combo = token
             weight = 100.0
 
-        # AK -> AKs + AKo
-        if len(h_part) == 2 and h_part[0] != h_part[1]:
-            if hand in [h_part + "s", h_part + "o"]:
+        if len(combo) == 2 and combo[0] != combo[1]:
+            if hand in (combo + "s", combo + "o"):
                 return weight
-        if hand == h_part:
+        elif hand == combo:
             return weight
 
     return 0.0
 
-def parse_range_to_list(range_str):
-    if not range_str or not isinstance(range_str, str):
+
+def parse_range_to_list(range_str: str) -> list[str]:
+    if not range_str:
         return ALL_HANDS.copy()
 
-    hands = []
-    items = [x.strip() for x in range_str.replace("\n", " ").split(",") if x.strip()]
-    for item in items:
-        h = item.split(":")[0].strip()
+    out: list[str] = []
+    for token in [x.strip() for x in range_str.split(",") if x.strip()]:
+        combo = token.split(":", 1)[0].strip()
+        if combo in ALL_HANDS:
+            out.append(combo)
+        elif len(combo) == 2 and combo[0] != combo[1]:
+            out.extend([combo + "s", combo + "o"])
+        elif len(combo) == 2 and combo[0] == combo[1]:
+            out.append(combo)
 
-        if h in ALL_HANDS:
-            hands.append(h)
-        elif len(h) == 2:
-            if h[0] == h[1]:
-                hands.append(h)
-            else:
-                hands.extend([h + "s", h + "o"])
+    return list(dict.fromkeys(out)) if out else ALL_HANDS.copy()
 
-    return list(set(hands)) if hands else ALL_HANDS.copy()
 
-def choose_task(ranges_db, view_name="Mobile"):
-    st.subheader(f"Trainer • {view_name}")
+def choose_random_task(ranges_db: dict, source: str, scenarios: list[str], filter_mode: str):
+    pool = []
+    for scenario in scenarios:
+        for spot in ranges_db.get(source, {}).get(scenario, {}):
+            if filter_mode == "All":
+                pool.append((scenario, spot))
+            elif filter_mode in GROUPS_DEFINITIONS and spot in GROUPS_DEFINITIONS[filter_mode]:
+                pool.append((scenario, spot))
+            elif spot == filter_mode:
+                pool.append((scenario, spot))
 
-    if not ranges_db:
-        st.error("Нет ренджей в папке ranges_spots")
-        return
-
-    sources = list(ranges_db.keys())
-    src = st.selectbox("Source", sources, index=0)
-
-    scenarios = list(ranges_db[src].keys())
-    selected_scenarios = st.multiselect("Scenario", scenarios, default=scenarios)
-
-    filt = st.selectbox("Фильтр", get_filter_options(), index=0)
-
-    pool = get_filtered_pool(ranges_db, [src], selected_scenarios, filt)
     if not pool:
-        st.warning("Под этот фильтр нет спотов")
-        return
+        return None
 
-    if st.button("🎲 Новая раздача"):
-        st.session_state["new_hand"] = True
+    scenario, spot = random.choice(pool)
+    data = ranges_db[source][scenario][spot]
+    train_range = data.get("training") or data.get("source") or data.get("full") or ""
+    hand = random.choice(parse_range_to_list(train_range))
+    rng = random.randint(0, 99)
 
-    if "task" not in st.session_state or st.session_state.get("new_hand", False):
-        src1, sc1, sp1 = random.choice(pool)
-        data = ranges_db[src1][sc1][sp1]
-
-        train_range = data.get("training", data.get("source", data.get("full", "")))
-        candidates = parse_range_to_list(train_range)
-        hand = random.choice(candidates)
-        rng = random.randint(0, 99)
-
-        correct = "FOLD"
-        if "call" in data or "4bet" in data:
-            w4 = get_weight(hand, data.get("4bet", ""))
-            wc = get_weight(hand, data.get("call", ""))
-            if rng < w4:
-                correct = "4BET"
-            elif rng < (w4 + wc):
-                correct = "CALL"
+    if "call" in data or "4bet" in data:
+        w4 = get_weight(hand, data.get("4bet", ""))
+        wc = get_weight(hand, data.get("call", ""))
+        if rng < w4:
+            correct = "4BET"
+        elif rng < w4 + wc:
+            correct = "CALL"
         else:
-            wf = get_weight(hand, data.get("full", ""))
-            if wf > 0:
-                correct = "RAISE"
+            correct = "FOLD"
+    elif "3bet" in data:
+        w3 = get_weight(hand, data.get("3bet", ""))
+        wc = get_weight(hand, data.get("call", ""))
+        if rng < w3:
+            correct = "3BET"
+        elif rng < w3 + wc:
+            correct = "CALL"
+        else:
+            correct = "FOLD"
+    else:
+        correct = "RAISE" if get_weight(hand, data.get("full", "")) > 0 else "FOLD"
 
-        st.session_state["task"] = {
-            "src": src1, "sc": sc1, "sp": sp1, "data": data,
-            "hand": hand, "rng": rng, "correct": correct
+    return {
+        "scenario": scenario,
+        "spot": spot,
+        "data": data,
+        "hand": hand,
+        "rng": rng,
+        "correct": correct,
+    }
+
+
+def load_history() -> pd.DataFrame:
+    if HISTORY_FILE.exists():
+        return pd.read_csv(HISTORY_FILE)
+    return pd.DataFrame(columns=["Date", "Spot", "Hand", "Result", "CorrectAction"])
+
+
+def save_to_history(spot: str, hand: str, result: int, correct_action: str) -> None:
+    row = pd.DataFrame([
+        {
+            "Date": datetime.now().isoformat(timespec="seconds"),
+            "Spot": spot,
+            "Hand": hand,
+            "Result": result,
+            "CorrectAction": correct_action,
         }
-        st.session_state["new_hand"] = False
-        st.session_state["answer"] = None
+    ])
+    if HISTORY_FILE.exists():
+        row.to_csv(HISTORY_FILE, mode="a", index=False, header=False)
+    else:
+        row.to_csv(HISTORY_FILE, index=False)
 
-    t = st.session_state["task"]
-    cfg = get_spot_config(t["sp"])
 
-    st.markdown("---")
-    st.write(f"**Spot:** {t['sp']}")
-    st.write(f"**Scenario:** {t['sc']}")
-    st.write(f"**Hero:** {cfg.hero} | **Villain:** {cfg.villain or '-'} | **Dealer:** {cfg.dealer}")
-    st.write(f"**Hand:** `{t['hand']}` | **RNG:** `{t['rng']}`")
-
-    col1, col2, col3 = st.columns(3)
-    if col1.button("FOLD"):
-        st.session_state["answer"] = "FOLD"
-    if col2.button("CALL"):
-        st.session_state["answer"] = "CALL"
-    if col3.button("4BET / RAISE"):
-        st.session_state["answer"] = "4BET"
-
-    ans = st.session_state.get("answer")
-    if ans:
-        correct = t["correct"]
-        if correct == "RAISE":
-            # для open raise приравниваем 4BET/RAISE как правильное "RAISE"
-            ok = (ans == "4BET")
-        else:
-            ok = (ans == correct)
-
-        if ok:
-            st.success(f"✅ Верно: {correct}")
-        else:
-            st.error(f"❌ Неверно. Правильно: {correct}")
-
-        with st.expander("Показать ренджи"):
-            st.write("source:", t["data"].get("source", "-"))
-            st.write("full:", t["data"].get("full", "-"))
-            st.write("training:", t["data"].get("training", "-"))
-            st.write("call:", t["data"].get("call", "-"))
-            st.write("4bet:", t["data"].get("4bet", "-"))
-            st.write("3bet:", t["data"].get("3bet", "-"))
+def delete_history(days: int | None = None) -> None:
+    if not HISTORY_FILE.exists():
+        return
+    df = pd.read_csv(HISTORY_FILE)
+    if df.empty:
+        return
+    if days is None:
+        df.iloc[0:0].to_csv(HISTORY_FILE, index=False)
+        return
+    df["Date"] = pd.to_datetime(df["Date"])
+    cutoff = datetime.now() - timedelta(days=days)
+    df = df[df["Date"] < cutoff]
+    df.to_csv(HISTORY_FILE, index=False)
