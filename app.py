@@ -1,30 +1,28 @@
 import streamlit as st
-import views.mobile
-import views.desktop
+
 import views.compare
+import views.desktop
+import views.mobile
 import views.stats
 
-st.set_page_config(page_title='Poker Trainer', layout='wide', initial_sidebar_state='collapsed')
+st.set_page_config(page_title="Preflop Trainer", layout="wide")
 
 
-def main():
-    with st.sidebar:
-        st.title('Poker Trainer')
-        app_mode = st.radio('Menu', ['🎮 Trainer', '🔬 Range Lab', '📊 Statistics'])
+def main() -> None:
+    st.sidebar.title("Preflop Trainer")
+    mode = st.sidebar.radio("Раздел", ["🎮 Trainer", "🔬 Range Lab", "📊 Stats"])
 
-        view_type = 'Mobile'
-        if app_mode == '🎮 Trainer':
-            view_type = st.radio('View Mode', ['Mobile', 'Desktop'], index=0)
-
-    if app_mode == '🔬 Range Lab':
+    if mode == "🎮 Trainer":
+        view = st.sidebar.radio("Вид", ["Mobile", "Desktop"], index=0)
+        if view == "Mobile":
+            views.mobile.show()
+        else:
+            views.desktop.show()
+    elif mode == "🔬 Range Lab":
         views.compare.show()
-    elif app_mode == '📊 Statistics':
-        views.stats.show()
-    elif view_type == 'Mobile':
-        views.mobile.show()
     else:
-        views.desktop.show()
+        views.stats.show()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
