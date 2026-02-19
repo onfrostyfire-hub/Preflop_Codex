@@ -1,9 +1,6 @@
-import streamlit as st
+import importlib
 
-import views.compare
-import views.desktop
-import views.mobile
-import views.stats
+import streamlit as st
 
 st.set_page_config(page_title="Preflop Trainer", layout="wide")
 
@@ -15,13 +12,13 @@ def main() -> None:
     if mode == "🎮 Trainer":
         view = st.sidebar.radio("Вид", ["Mobile", "Desktop"], index=0)
         if view == "Mobile":
-            views.mobile.show()
+            importlib.import_module("views.mobile").show()
         else:
-            views.desktop.show()
+            importlib.import_module("views.desktop").show()
     elif mode == "🔬 Range Lab":
-        views.compare.show()
+        importlib.import_module("views.compare").show()
     else:
-        views.stats.show()
+        importlib.import_module("views.stats").show()
 
 
 if __name__ == "__main__":
